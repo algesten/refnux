@@ -108,6 +108,6 @@ connect = (viewfn) -> ->
     dispatch = provider.store.dispatch
 
     # invoke the actual view function
-    viewfn(dispatch)(state)
+    viewfn(state, dispatch)
 
 module.exports = {createStore, Provider, connect}
