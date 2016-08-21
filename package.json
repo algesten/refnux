@@ -1,6 +1,6 @@
 {
   "name": "refnux",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "No store, actions are pure functions",
   "main": "lib/refnux.js",
   "author": "Martin Algesten",
