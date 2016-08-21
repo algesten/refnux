@@ -4,6 +4,9 @@
 # singleton during render
 _provider = null
 
+# test if object is an object (not array)
+isobject = (o) -> !!o and typeof o == 'object' and !Array.isArray(o)
+
 class Provider extends Component
 
     constructor: (props) ->
@@ -15,7 +18,7 @@ class Provider extends Component
     render: ->
         _provider = this # set singleton for connect function
         try
-            @app(@state)
+            @app() # render with current state
         catch err
             throw err
         finally
@@ -23,30 +26,43 @@ class Provider extends Component
 
 # app and state are required
 Provider.propTypes = {
-    app:PropTypes.func.isRequired
-    state:PropTypes.object.isRequired
+    app:   PropTypes.func.isRequired
+    state: PropTypes.object.isRequired
 }
 
-# search in o for a value val and return the corresponding key
-findkey = (o, val) ->
-    return k for k, v of o when v == val
-    throw new Error("Unable to find key for value in state")
-
-# test if object is an object (not array)
-isobject = (o) -> !!o and typeof o == 'object' and !Array.isArray(o)
-
-
 # connected stateles functions receive a dispatch function to run actions
-connect = (viewfn) -> (state) ->
-    throw new Error("Connected function takes a plain object argument") unless isobject(state)
+connect = (viewfn) -> ->
+
+    # save provider for this render pass
     provider = _provider
+
+    # the state to dispatch
+    state = provider.state
+
     # the local dispatcher
     dispatch = (val, action) ->
-        # find the key of the dispatched value
-        k = findkey state, val
+        throw new Error("Dispatched value must be an object") unless isobject(val)
+
+        # sanity check
+        for k, v of val
+            unless state.hasOwnProperty(k)
+                throw new Error("Dispatched key (#{k}) missing in state")
+            unless state[k] == v
+                throw new Error("Dispatched value for key (#{k}) differs in state")
+
+        # execute the action
         newval = action val
-        newstate = Object.assign {}, state
-        newstate[k] = newval
+
+        # sanity check 2
+        throw new Error("Action must return an object") unless isobject(newval)
+        for k, v of newval
+            unless state.hasOwnProperty(k)
+                throw new Error("Action returned key (#{k}) missing in state")
+
+        # create a new state
+        newstate = Object.assign {}, state, newval
+
+        # update the state
         provider.setState newstate
 
     viewfn(dispatch)(state)
