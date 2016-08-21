@@ -1,0 +1,27 @@
+{
+  "name": "refnux",
+  "version": "1.0.0",
+  "description": "No store, actions are pure functions",
+  "main": "lib/refnux.js",
+  "author": "Martin Algesten",
+  "license": "ISC",
+  "scripts": {
+    "prepublish": "coffee -m -c -o lib src"
+  },
+  "files": [
+    "lib"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:algesten/refnux.git"
+  },
+  "devDependencies": {
+    "coffee-script": "^1.10.0"
+  },
+  "peerDependencies": {
+    "react": "^0.14 || ^15"
+  },
+  "bugs": {
+    "url": "https://github.com/algesten/refnux/issues"
+  }
+}
