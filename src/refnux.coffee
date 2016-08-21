@@ -7,53 +7,48 @@ provider = null
 # test if object is an object (not array)
 isobject = (o) -> !!o and typeof o == 'object' and !Array.isArray(o)
 
-class Provider extends Component
+# create a store over a state
+createStore = (state) ->
 
-    constructor: (props) ->
-        super
-        throw new Error("Provider does not support children") if props.children
-        @state = props.state
-        @app   = props.app
+    # store listeners for change
+    listeners = []
 
-    render: ->
-        provider = this # set singleton for connect function
-        try
-            @app() # render with current state
-        catch err
-            throw err
-        finally
-            provider = null # remove when done
+    # subscribe for store changes
+    subscribe = (listener) ->
+        isSubscribed = true
+        listeners.push listener
+        unsubscribe = ->
+            return unless isSubscribed
+            isSubscribed = false
+            index = listeners.indexOf(listener)
+            listeners.splice(index, 1)
 
-    dispatch: (val, action) =>
+    # set a new state and tell all listeners about it
+    setState = (newstate) ->
+        prevstate = state
+        state = newstate
+        listeners.forEach (l) -> l state, prevstate
+
+    # get current state
+    getState = -> state
+
+    # one at a time
+    dispatching = false
+
+    # dispatch the action (function).
+    dispatch = (action) ->
 
         # only one at a time
-        throw new Error("dispatch in dispatch is not allowed") if @dispatching
-        @dispatching = true
-
-        # current state
-        state = @state
-
-        # allow one arg action that takes entire state
-        if arguments.length == 1
-            action = val
-            val = state
-
-        # sanity check
-        unless val == state
-            throw new Error("Dispatched value must be an object") unless isobject(val)
-            for k, v of val
-                unless state.hasOwnProperty(k)
-                    throw new Error("Dispatched key (#{k}) missing in state")
-                unless state[k] == v
-                    throw new Error("Dispatched value for key (#{k}) differs in state")
+        throw new Error("dispatch in dispatch is not allowed") if dispatching
+        dispatching = true
 
         # execute the action
         try
-            newval = action val, @dispatch
+            newval = action state, dispatch
         catch err
             throw err
         finally
-            @dispatching = false
+            dispatching = false
 
         # sanity check 2
         throw new Error("Action must return an object") unless isobject(newval)
@@ -65,13 +60,42 @@ class Provider extends Component
         newstate = Object.assign {}, state, newval
 
         # update the state
-        @setState newstate
+        setState newstate
 
+    # exposed facade
+    {subscribe, dispatch, getState}
+
+
+class Provider extends Component
+
+    constructor: (props) ->
+        super
+        throw new Error("Provider does not support children") if props.children
+        @store = props.store
+        @app   = props.app
+        @state = props.store.getState()
+        @store.subscribe (newstate) => @setState(newstate)
+
+    render: ->
+        provider = this # set singleton for connect function
+        try
+            @app() # render with current state
+        catch err
+            throw err
+        finally
+            provider = null # remove when done
+
+
+storeShape = PropTypes.shape(
+    subscribe: PropTypes.func.isRequired,
+    dispatch: PropTypes.func.isRequired,
+    getState: PropTypes.func.isRequired
+)
 
 # app and state are required
 Provider.propTypes = {
     app:   PropTypes.func.isRequired
-    state: PropTypes.object.isRequired
+    store: storeShape.isRequired
 }
 
 # connected stateless functions receive a dispatch function to execute actions
@@ -80,7 +104,10 @@ connect = (viewfn) -> ->
     unless provider
         throw new Error("No provider in scope. View function outside Provider?")
 
-    # invoke the actual view function
-    viewfn(provider.dispatch)(provider.state)
+    state = provider.store.getState()
+    dispatch = provider.store.dispatch
 
-module.exports = {connect, Provider}
+    # invoke the actual view function
+    viewfn(dispatch)(state)
+
+module.exports = {createStore, Provider, connect}
