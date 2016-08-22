@@ -1,7 +1,7 @@
 {
   "name": "refnux",
   "version": "1.0.4",
-  "description": "No store, actions are pure functions",
+  "description": "re-fn-ux with emphasis on fn",
   "main": "lib/refnux.js",
   "author": "Martin Algesten",
   "license": "ISC",
