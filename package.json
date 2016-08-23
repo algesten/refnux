@@ -1,6 +1,6 @@
 {
   "name": "refnux",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "re-fn-ux with emphasis on fn",
   "main": "lib/refnux.js",
   "author": "Martin Algesten",
