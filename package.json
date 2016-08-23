@@ -15,6 +15,13 @@
     "type": "git",
     "url": "git@github.com:algesten/refnux.git"
   },
+  "keywords": [
+    "flux",
+    "store",
+    "unidirectional",
+    "react",
+    "redux"
+  ],
   "devDependencies": {
     "coffee-script": "^1.10.0"
   },

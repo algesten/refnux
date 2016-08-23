@@ -74,7 +74,15 @@ class Provider extends Component
         @store = props.store
         @app   = props.app
         @state = props.store.getState()
-        @store.subscribe (newstate) => @setState(newstate)
+
+    componentDidMount: =>
+        # start listening to changes in the store
+        @unsubscribe = @store.subscribe (newstate) => @setState(newstate)
+
+    componentWillUnmount: =>
+        # stop listening to the store
+        @unsubscribe?()
+        @unsubscribe = null
 
     render: ->
         provider = this # set singleton for connect function
