@@ -23,10 +23,15 @@
     "redux"
   ],
   "devDependencies": {
-    "coffee-script": "^1.10.0"
+    "chai": "^3.5.0",
+    "coffee-script": "^1.10.0",
+    "mocha": "^3.0.2",
+    "sinon": "^1.17.5",
+    "sinon-chai": "^2.8.0"
   },
   "peerDependencies": {
-    "react": "^0.14 || ^15"
+    "react": "^0.14 || ^15",
+    "react-dom": "^0.14 || ^15"
   },
   "bugs": {
     "url": "https://github.com/algesten/refnux/issues"

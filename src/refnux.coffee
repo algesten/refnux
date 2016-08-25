@@ -8,19 +8,24 @@ provider = null
 isobject = (o) -> !!o and typeof o == 'object' and !Array.isArray(o)
 
 # create a store over a state
-createStore = (state) ->
+createStore = (state = {}) ->
 
     # store listeners for change
     listeners = []
 
     # subscribe for store changes
     subscribe = (listener) ->
-        isSubscribed = true
+
+        # check it's actually a listener
+        throw new Error("Listener must be a function") unless typeof(listener) == 'function'
+
+        # remember it
         listeners.push listener
-        unsubscribe = ->
-            return unless isSubscribed
-            isSubscribed = false
+
+        # return unsubscribe function
+        ->
             index = listeners.indexOf(listener)
+            return if index < 0
             listeners.splice(index, 1)
 
     # set a new state and tell all listeners about it
@@ -38,6 +43,9 @@ createStore = (state) ->
     # dispatch the action (function).
     dispatch = (action) ->
 
+        # must be a function
+        throw new Error("Action must be a function") unless typeof action == 'function'
+
         # only one at a time
         throw new Error("dispatch in dispatch is not allowed") if dispatching
         dispatching = true
@@ -52,9 +60,14 @@ createStore = (state) ->
 
         # sanity check 2
         throw new Error("Action must return an object") unless isobject(newval)
+        change = false # check if we have a change
         for k, v of newval
             unless state.hasOwnProperty(k)
                 throw new Error("Action returned key (#{k}) missing in state")
+            change |= state[k] != v
+
+        # no change?
+        return unless change
 
         # create a new state
         newstate = Object.assign {}, state, newval
@@ -71,8 +84,7 @@ class Provider extends Component
     constructor: (props) ->
         super
         throw new Error("Provider does not support children") if props.children
-        @store = props.store
-        @app   = props.app
+        {@store, @app} = props
         @state = props.store.getState()
 
     componentDidMount: =>
@@ -107,15 +119,20 @@ Provider.propTypes = {
 }
 
 # connected stateless functions receive a dispatch function to execute actions
-connect = (viewfn) -> ->
+connect = (viewfn) ->
 
-    unless provider
-        throw new Error("No provider in scope. View function outside Provider?")
+    # ensure arg is good
+    throw new Error("connect requires a function argument") unless typeof(viewfn) == 'function'
 
-    state = provider.store.getState()
-    dispatch = provider.store.dispatch
+    # wrapped render function
+    ->
+        unless provider
+            throw new Error("No provider in scope. View function outside Provider?")
 
-    # invoke the actual view function
-    viewfn(state, dispatch)
+        state = provider.store.getState()
+        dispatch = provider.store.dispatch
+
+        # invoke the actual view function
+        viewfn(state, dispatch)
 
 module.exports = {createStore, Provider, connect}
