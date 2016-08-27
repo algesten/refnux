@@ -2,6 +2,8 @@
 
 > re-fn-ux with emphasis on fn
 
+[![Build Status](https://travis-ci.org/algesten/refnux.svg?branch=master)](https://travis-ci.org/algesten/refnux)
+
 React's [Stateless Functions][stlss] means we can use simple functions
 instead of instances of component classes.
 
