@@ -6,7 +6,8 @@
   "author": "Martin Algesten",
   "license": "ISC",
   "scripts": {
-    "prepublish": "coffee -m -c -o lib src"
+    "prepublish": "coffee -m -c -o lib src",
+    "test": "mocha"
   },
   "files": [
     "lib"
