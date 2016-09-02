@@ -8,18 +8,23 @@ pf = createFactory Provider
 
 describe 'createStore', ->
 
-    ['subscribe', 'dispatch', 'getState'].forEach (fn) ->
+    ['subscribe', 'dispatch'].forEach (fn) ->
         it "makes a store with #{fn}", ->
         o = createStore()
         eql typeof(o[fn]), 'function'
+        eql typeof(o.state), 'object'
 
     it 'makes an initial empty state', ->
         o = createStore()
-        eql o.getState(), {}
+        eql o.state, {}
 
     it 'takes an initial state as arg', ->
         o = createStore(panda:42)
-        eql o.getState(), panda:42
+        eql o.state, panda:42
+
+    it 'cant write to store.state', ->
+        o = createStore(panda:42)
+        assert.throws (->o.state = {}), 'store.state is read only'
 
     describe 'dispatch', ->
 
@@ -29,19 +34,19 @@ describe 'createStore', ->
             o = createStore st
 
         it 'doesnt modify the incoming state', ->
-            assert st == o.getState(), 'initial state is unmodified'
+            assert st == o.state, 'initial state is unmodified'
 
         it 'takes an action function as argument', ->
             o.dispatch -> {}
-            eql o.getState(), panda:42
+            eql o.state, panda:42
 
         it 'doesnt change the state when no mutation', ->
             o.dispatch -> {}
-            assert o.getState() == st
+            assert o.state == st
 
         it 'doesnt change the state when no change', ->
             o.dispatch -> panda:42
-            assert o.getState() == st
+            assert o.state == st
 
         it 'refuses any other type of arg', ->
             assert.throws (->o.dispatch null), 'Action must be a function'
@@ -54,13 +59,13 @@ describe 'createStore', ->
         it 'mixes in action return into state', ->
             act = -> panda:43
             o.dispatch act
-            eql o.getState(), panda:43
+            eql o.state, panda:43
             eql st, panda:42
 
         it 'doesnt modify state objects', ->
             act = -> panda:43
             o.dispatch act
-            assert st != o.getState(), 'not same state'
+            assert st != o.state, 'not same state'
 
         it 'refuses keys not already present', ->
             act = -> cub:true

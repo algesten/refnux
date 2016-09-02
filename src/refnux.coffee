@@ -34,9 +34,6 @@ createStore = (state = {}) ->
         state = newstate
         listeners.forEach (l) -> l state, prevstate
 
-    # get current state
-    getState = -> state
-
     # one at a time
     dispatching = false
 
@@ -76,7 +73,16 @@ createStore = (state = {}) ->
         setState newstate
 
     # exposed facade
-    {subscribe, dispatch, getState}
+    store = {subscribe, dispatch}
+
+    # state property read only getter
+    Object.defineProperty store, 'state',
+        enumerable: true
+        get: -> state
+        set: -> throw new Error("store.state is read only")
+
+    # the finished store
+    store
 
 
 class Provider extends Component
@@ -85,7 +91,7 @@ class Provider extends Component
         super
         throw new Error("Provider does not support children") if props.children
         {@store, @app} = props
-        @state = props.store.getState()
+        @state = props.store.state
 
     componentDidMount: =>
         # start listening to changes in the store
@@ -108,8 +114,8 @@ class Provider extends Component
 
 storeShape = PropTypes.shape(
     subscribe: PropTypes.func.isRequired,
-    dispatch: PropTypes.func.isRequired,
-    getState: PropTypes.func.isRequired
+    dispatch:  PropTypes.func.isRequired,
+    state:     PropTypes.object.isRequired
 )
 
 # app and state are required
@@ -129,7 +135,7 @@ connect = (viewfn) ->
         unless provider
             throw new Error("No provider in scope. View function outside Provider?")
 
-        state = provider.store.getState()
+        state = provider.store.state
         dispatch = provider.store.dispatch
 
         # invoke the actual view function

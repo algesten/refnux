@@ -45,12 +45,12 @@ The store exposes a dispatch function (see dispatch below)
 store.dispatch(myaction)
 ```
 
-### getState on store
+### state on store
 
-The store also exposes a getState to get the current state
+The store also exposes a read only property `store.state` to get the current state
 
 ```javascript
-var current = store.getState()
+var current = store.state
 ```
 
 ## Provider
