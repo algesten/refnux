@@ -139,13 +139,14 @@ var handleResponse = (user) => (state) => {
 
 var requestUser = (userId) => (state, dispatch) => {
     io.emit('getUser', userId, (user) => {
-        dispatch handleResponse(user)
+        dispatch(handleResponse(user))
     })
     return {info:"Requesting user"}
 }
 ```
 
-N.B. it is an error to use the dispatch function synchronously.
+N.B. it is an error to use the dispatch function synchronously.  A
+dispatch can't be called in the same call stack as another dispatch.
 
 
 #### ISC License (ISC)
