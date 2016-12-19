@@ -169,8 +169,11 @@ describe 'connect', ->
         app = connect -> div(null, 'abc')
         assert.throws app, 'No provider in scope. View function outside Provider?'
 
-    it 'tidies up after render', ->
+    it 'tidies up after render', (done) ->
         app = connect -> div(null, 'abc')
         pel = pf({app, store})
         renderToString pel
-        assert.throws app, 'No provider in scope. View function outside Provider?'
+        setTimeout ->
+            assert.throws app, 'No provider in scope. View function outside Provider?'
+            done()
+        , 0

@@ -109,7 +109,11 @@ class Provider extends Component
         catch err
             throw err
         finally
-            provider = null # remove when done
+            # render pass of JSX is synchronous, child components are
+            # rendered *after* the render function. we cleanup in
+            # a timeout, because callback of @setState doesn't
+            # happen on first render.
+            (setImmediate ? setTimeout) (-> provider = null), 0
 
 
 storeShape = PropTypes.shape(
