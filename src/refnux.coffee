@@ -135,7 +135,7 @@ connect = (viewfn) ->
     throw new Error("connect requires a function argument") unless typeof(viewfn) == 'function'
 
     # wrapped render function
-    ->
+    (props) ->
         unless provider
             throw new Error("No provider in scope. View function outside Provider?")
 
@@ -143,6 +143,6 @@ connect = (viewfn) ->
         dispatch = provider.store.dispatch
 
         # invoke the actual view function
-        viewfn(state, dispatch)
+        viewfn(state, dispatch, props)
 
 module.exports = {createStore, Provider, connect}
