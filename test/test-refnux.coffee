@@ -163,7 +163,16 @@ describe 'connect', ->
         html = renderToString pel
         eql html, '<div data-reactroot="" data-reactid="1" '+
             'data-react-checksum="-1466167168">abc</div>'
-        eql vf.args, [[{panda:42}, store.dispatch]]
+        eql vf.args, [[{panda:42}, store.dispatch, undefined]]
+
+    it 'passes properties to wrapped component', ->
+        props = { some: 'prop' }
+        component = connect vf = spy -> div(null, 'abc')
+        app = -> component(props)
+        pel = pf({app, store})
+        eql vf.args, []
+        html = renderToString pel
+        eql vf.args, [[{panda:42}, store.dispatch, props]]
 
     it 'complains if connected function is used outside provider', ->
         app = connect -> div(null, 'abc')
