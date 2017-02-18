@@ -1,7 +1,7 @@
 
 {createStore, Provider, connect} = require '../src/refnux'
 
-{createFactory} = require 'react'
+{createFactory, Component} = require 'react'
 {renderToString} = require 'react-dom/server'
 {div} = require('react').DOM
 pf = createFactory Provider
@@ -32,14 +32,6 @@ describe 'connect', ->
         eql vf.args, [[{panda:42}, store.dispatch, props]]
 
     it 'complains if connected function is used outside provider', ->
-        app = connect -> div(null, 'abc')
-        assert.throws app, 'No provider in scope. View function outside Provider?'
-
-    it 'tidies up after render', (done) ->
-        app = connect -> div(null, 'abc')
-        pel = pf({app, store})
-        renderToString pel
-        setTimeout ->
-            assert.throws app, 'No provider in scope. View function outside Provider?'
-            done()
-        , 0
+        app = connect (state, dispatch, props) -> div(null, 'abc')
+        fail = -> renderToString div null, app()
+        assert.throws fail, 'No provider in scope. First render must be from Provider'
