@@ -50,6 +50,13 @@ createStore = (state = {}) ->
         # execute the action
         try
             newval = action state, dispatch
+
+            if newval and typeof(newval.then) is 'function'
+                dispatching = false
+                return newval.then(
+                    (val) -> dispatch(-> val)
+                )
+
         catch err
             throw err
         finally
@@ -64,13 +71,16 @@ createStore = (state = {}) ->
             change |= state[k] != v
 
         # no change?
-        return unless change
+        return state unless change
 
         # create a new state
         newstate = Object.assign {}, state, newval
 
         # update the state
         setState newstate
+
+        # return new state
+        newstate
 
     # exposed facade
     store = {subscribe, dispatch}
