@@ -91,7 +91,9 @@ class Provider extends Component
         super
         throw new Error("Provider does not support multiple children") if props.children?.length > 1
         {@store, @app} = props
-        @app = props.children[0] if props.children?.length is 1
+        if props.children?.length is 1
+            throw new Error 'Provider: can\'t set app component both as property and child' if @app
+            @app = props.children[0]
         @state = props.store.state
 
     componentDidMount: =>
