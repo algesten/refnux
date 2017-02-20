@@ -55,8 +55,6 @@ createStore = (state = {}) ->
                 dispatching = false
                 return newval.then(
                     (val) -> dispatch(-> val)
-                ,
-                    (err) -> dispatch(-> throw err)
                 )
 
         catch err
@@ -73,13 +71,16 @@ createStore = (state = {}) ->
             change |= state[k] != v
 
         # no change?
-        return unless change
+        return state unless change
 
         # create a new state
         newstate = Object.assign {}, state, newval
 
         # update the state
         setState newstate
+
+        # return new state
+        newstate
 
     # exposed facade
     store = {subscribe, dispatch}

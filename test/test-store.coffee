@@ -114,6 +114,23 @@ describe 'createStore', ->
                 .catch (e) -> e
                 .then (e) -> assert e == error
 
+        it 'returns new state after dispatching an action', ->
+            newstate = o.dispatch -> {}
+            assert o.state == st
+            assert o.state == newstate
+
+        it 'returns new state after dispatching an async action', ->
+            act = -> new Promise(
+                (res, rej) ->
+                    setTimeout(
+                        -> res({panda: 43})
+                    , 1)
+            )
+            assert o.state.panda == 42
+            o.dispatch(act).then (newstate) ->
+                assert o.state.panda == 43
+                assert o.state == newstate
+
 
     describe 'subscribe', ->
 
