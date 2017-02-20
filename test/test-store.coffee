@@ -81,7 +81,38 @@ describe 'createStore', ->
                 assert.throws (->dispatch (->)), 'dispatch in dispatch is not allowed'
             o.dispatch act
             eql act.args.length, 1
+        
+        it 'accepts async actions', ->
+            act = -> new Promise(
+                (res, rej) ->
+                    setTimeout(
+                        -> res({panda: 43})
+                    , 1)
+            )
+            assert o.state.panda == 42
+            o.dispatch(act).then ->
+                assert o.state.panda == 43
 
+        it 'correctly handles rejected async actions', ->
+            error = new Error 'wtf'
+            act = -> new Promise(
+                (res, rej) ->
+                    setTimeout(
+                        -> rej(error)
+                    , 1)
+            )
+            o.dispatch(act)
+                .catch (e) -> e
+                .then (e) -> assert e == error
+
+        it 'correctly handles unexpected errors in  async actions', ->
+            error = new Error 'wtf'
+            act = -> new Promise(
+                (res, rej) -> throw error
+            )
+            o.dispatch(act)
+                .catch (e) -> e
+                .then (e) -> assert e == error
 
 
     describe 'subscribe', ->

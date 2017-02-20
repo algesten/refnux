@@ -50,6 +50,15 @@ createStore = (state = {}) ->
         # execute the action
         try
             newval = action state, dispatch
+
+            if newval and typeof(newval.then) is 'function'
+                dispatching = false
+                return newval.then(
+                    (val) -> dispatch(-> val)
+                ,
+                    (err) -> dispatch(-> throw err)
+                )
+
         catch err
             throw err
         finally
