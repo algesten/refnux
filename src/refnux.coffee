@@ -89,8 +89,9 @@ class Provider extends Component
 
     constructor: (props) ->
         super
-        throw new Error("Provider does not support children") if props.children
+        throw new Error("Provider does not support multiple children") if props.children?.length > 1
         {@store, @app} = props
+        @app = props.children[0] if props.children?.length is 1
         @state = props.store.state
 
     componentDidMount: =>

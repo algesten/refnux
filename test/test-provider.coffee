@@ -18,6 +18,8 @@ describe 'Provider', ->
 
     it 'requires a store and an app function', ->
         pel = pf({app, store})
+        pel2 = pf({ children: [app], store })
+        assert pel.app == pel2.app
 
     it 'invokes the app function on render', ->
         pel = pf({app, store})
@@ -27,7 +29,7 @@ describe 'Provider', ->
         eql app.args, [[]]
 
     it 'rerenders on store change', ->
-        pel = pf({app, store})
+        pel = pf({children: [app], store})
         renderToString pel
         store.dispatch -> panda:43
         eql app.args, [[],[]]
