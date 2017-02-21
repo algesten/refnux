@@ -1,5 +1,5 @@
 
-{Component, PropTypes, createElement} = require 'react'
+{Component, PropTypes} = require 'react'
 
 # singleton during render
 provider = null
@@ -141,41 +141,21 @@ Provider.propTypes = {
     store: storeShape.isRequired
 }
 
-# internal wrapping component to keep track of the
-# provider when doing rerender out of scope
-class Connected extends Component
-
-    constructor: (props) ->
-        super
-        {@viewfn} = props
-
-    render: =>
-        # store away the global provider locally in case we
-        # get a local re-render
-        @provider = provider if provider
-
-        # and use the local ref always
-        local = @provider
-
-        unless local
-            throw new Error("No provider in scope. First render must be from Provider")
-
-        state = local.store.state
-        dispatch = local.store.dispatch
-
-        # invoke the actual view function
-        @viewfn(state, dispatch, @props.outerprops)
-
-
-
 # connected stateless functions receive a dispatch function to execute actions
 connect = (viewfn) ->
 
     # ensure arg is good
     throw new Error("connect requires a function argument") unless typeof(viewfn) == 'function'
 
-    # the wrapping Connected element keeps track of the provider when
-    # rerender out of scope
-    (props) -> createElement Connected, {viewfn, outerprops:props}
+    # wrapped render function
+    (props) ->
+        unless provider
+            throw new Error("No provider in scope. View function outside Provider?")
+
+        state = provider.store.state
+        dispatch = provider.store.dispatch
+
+        # invoke the actual view function
+        viewfn(state, dispatch, props)
 
 module.exports = {createStore, Provider, connect}
