@@ -1,8 +1,5 @@
 
-{Component, PropTypes} = require 'react'
-
-# singleton during render
-provider = null
+{Component, PropTypes, createElement} = require 'react'
 
 # test if object is an object (not array)
 isobject = (o) -> !!o and typeof o == 'object' and !Array.isArray(o)
@@ -99,12 +96,19 @@ class Provider extends Component
 
     constructor: (props) ->
         super
-        throw new Error("Provider does not support multiple children") if props.children?.length > 1
+        if Array.isArray(props.children) and props.children.length > 1
+            throw new Error("Provider does not support multiple children")
         {@store, @app} = props
-        if props.children?.length is 1
+
+        if props.children?
             throw new Error 'Provider: can\'t set app component both as property and child' if @app
-            @app = props.children[0]
+            @app = props.children
+            if false and typeof(props.children) isnt 'function'
+                @app = -> props.children
+
         @state = props.store.state
+
+    getChildContext: => { store: this.props.store }
 
     componentDidMount: =>
         # start listening to changes in the store
@@ -115,18 +119,10 @@ class Provider extends Component
         @unsubscribe?()
         @unsubscribe = null
 
-    render: ->
-        provider = this # set singleton for connect function
-        try
-            @app() # render with current state
-        catch err
-            throw err
-        finally
-            # render pass of JSX is synchronous, child components are
-            # rendered *after* the render function. we cleanup in
-            # a timeout, because callback of @setState doesn't
-            # happen on first render.
-            (setImmediate ? setTimeout) (-> provider = null), 0
+    render: =>
+        if typeof(@app) is 'function'
+            return @app()
+        return @app
 
 
 storeShape = PropTypes.shape(
@@ -137,9 +133,16 @@ storeShape = PropTypes.shape(
 
 # app and state are required
 Provider.propTypes = {
-    app:   PropTypes.func.isRequired
+    app:   PropTypes.func
     store: storeShape.isRequired
 }
+
+Provider.childContextTypes = {
+    store: storeShape.isRequired
+}
+
+# injection point for getting newly created elements
+proxy = doproxy: (v) -> v
 
 # connected stateless functions receive a dispatch function to execute actions
 connect = (viewfn) ->
@@ -147,15 +150,24 @@ connect = (viewfn) ->
     # ensure arg is good
     throw new Error("connect requires a function argument") unless typeof(viewfn) == 'function'
 
-    # wrapped render function
-    (props) ->
-        unless provider
-            throw new Error("No provider in scope. View function outside Provider?")
+    # create a unique instance of Connected for each connected component
+    # this is used to wire up the store via context.
+    Connected = (props, context) ->
 
-        state = provider.store.state
-        dispatch = provider.store.dispatch
+        throw new Error("No provider in scope.") unless context.store
+
+        # the current state/dispatch
+        {state, dispatch} = context.store
 
         # invoke the actual view function
         viewfn(state, dispatch, props)
 
-module.exports = {createStore, Provider, connect}
+    # this is the magic
+    Connected.contextTypes = {
+        store: storeShape.isRequired
+    }
+
+    # receive incoming props, and create instance of the new Connected
+    (props) -> proxy.doproxy createElement Connected, (props ? {})
+
+module.exports = {createStore, Provider, connect, proxy}

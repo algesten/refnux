@@ -1,7 +1,7 @@
 
 {createStore, Provider, connect} = require '../src/refnux'
 
-{createFactory} = require 'react'
+{createFactory, Component} = require 'react'
 {renderToString} = require 'react-dom/server'
 {div} = require('react').DOM
 pf = createFactory Provider
@@ -20,7 +20,7 @@ describe 'connect', ->
         html = renderToString pel
         eql html, '<div data-reactroot="" data-reactid="1" '+
             'data-react-checksum="-1466167168">abc</div>'
-        eql vf.args, [[{panda:42}, store.dispatch, undefined]]
+        eql vf.args, [[{panda:42}, store.dispatch, {}]]
 
     it 'passes properties to wrapped component', ->
         props = { some: 'prop' }
@@ -32,14 +32,15 @@ describe 'connect', ->
         eql vf.args, [[{panda:42}, store.dispatch, props]]
 
     it 'complains if connected function is used outside provider', ->
-        app = connect -> div(null, 'abc')
-        assert.throws app, 'No provider in scope. View function outside Provider?'
+        app = connect (state, dispatch, props) -> div(null, 'abc')
+        fail = -> renderToString div null, app()
+        assert.throws fail, 'No provider in scope.'
 
-    it 'tidies up after render', (done) ->
-        app = connect -> div(null, 'abc')
+    it 'connects nested sub-components', ->
+        nspy = null
+        nested = connect nspy = spy (state) -> div(null, "l2 #{state.panda}")
+        app = connect (state) -> div(null, "l1 #{state.panda}", nested())
         pel = pf({app, store})
-        renderToString pel
-        setTimeout ->
-            assert.throws app, 'No provider in scope. View function outside Provider?'
-            done()
-        , 0
+        html = renderToString pel
+        eql html, '<div data-reactroot="" data-reactid="1" data-react-checksum="-819321188"><!-- react-text: 2 -->l1 42<!-- /react-text --><div data-reactid="3">l2 42</div></div>'
+        eql nspy.args, [[store.state, store.dispatch, {}]]
