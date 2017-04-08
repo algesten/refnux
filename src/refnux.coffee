@@ -1,5 +1,5 @@
-
-{Component, PropTypes, createElement} = require 'react'
+{Component, createElement} = require 'react'
+PropTypes = require 'try-prop-types'
 
 # test if object is an object (not array)
 isobject = (o) -> !!o and typeof o == 'object' and !Array.isArray(o)
